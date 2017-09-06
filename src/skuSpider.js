@@ -93,20 +93,16 @@ function getAllSkulist(siteInfo) {
  * @return {Object}             商品数据
  */
 function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
-  let browser;
+  let browser, page;
+  return genPage()
+    .then((data) => {
 
-  return puppeteer.launch({
-      // TODO: 这里的timeout似乎没有效果
-      // timeout: skuCateDetail.limit * 3000
-      timeout: 200000
-    })
-    .then(data => {
-      browser = data;
+      ({ browser, page } = data);
 
       const detailProcess = [];
       skuCateDetail.detailLinks.forEach((url) => {
         detailProcess.push(() => {
-          return puppeteerHtml(browser, url)
+          return getHtml(page, url)
             .then((data) => {
               let skuInfo = siteInfo.getSkuContent(url, data, skuCateDetail)
               console.log(`>> 成功获取 ${skuInfo.sku_name.value} 商品数据！`)
@@ -127,6 +123,12 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
           console.log(err)
         });
     })
+    .then(() => {
+      // 因为接下来browser肯定会关闭
+      // 这里再把page关闭掉其实意义不大
+      // 先保留代码
+      return page.close();
+    })
     .then((data) => {
       browser.close();
       console.log(`> 成功获取 ${skuCateDetail.catesList.join('>')} 的前 ${skuCateDetail.limit} 个商品！`)
@@ -138,15 +140,22 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
 }
 
 /**
- * 获取文档的标准HTML
- * @param  {Object} browser puppeteer的browser对象
- * @param  {String} url     页面连接
- * @return {Object}         <Promise<HTML String>>
+ * 生成一个puppeteer的browser和page对象
+ * @return {Object} Promise
  */
-function puppeteerHtml(browser, url) {
-  let page;
-  return browser.newPage()
-    .then((data) => {
+function genPage() {
+  let browser, page;
+
+  return puppeteer.launch({
+      // TODO: 这里的timeout似乎没有效果
+      // timeout: skuCateDetail.limit * 3000
+      timeout: 200000
+    })
+    .then(data => {
+      browser = data;
+      return browser.newPage()
+    })
+    .then(data => {
       page = data;
       return page.setRequestInterceptionEnabled(true)
     })
@@ -160,14 +169,23 @@ function puppeteerHtml(browser, url) {
         }
       });
 
-      return page.goto(url);
+      return {
+        page,
+        browser
+      }
     })
+}
+
+/**
+ * 获取文档的标准HTML
+ * @param  {Object} browser puppeteer的browser对象
+ * @param  {String} url     页面连接
+ * @return {Object}         <Promise<HTML String>>
+ */
+function getHtml(page, url) {
+  return page.goto(url)
     .then(() => {
       return page.content();
-    })
-    .then((data) => {
-      page.close();
-      return data;
     })
     .catch((err) => {
       console.log(err)
