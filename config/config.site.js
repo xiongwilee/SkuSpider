@@ -38,7 +38,7 @@ module.exports = [{
       const $ = cheerio.load(html);
 
       // 获取商品链接列表
-      const limit = 2; // 商品限制
+      const limit = 10; // 商品限制
       const links = $('.j-sku-item .p-img a');
       const detailLinks = [];
       for (let i = 0; i < links.length; i++) {

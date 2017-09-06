@@ -28,7 +28,7 @@ function skuSpider(siteConfig) {
   return promiseGenerator(siteProcess)
     .then((data) => {
       data.forEach((item) => {
-        genCsvData(item);
+        genCsvData(item.siteInfo, item.siteData);
       });
     })
     .catch((err) => {
@@ -73,9 +73,16 @@ function getAllSkulist(siteInfo) {
     })
   })
 
-  return promiseGenerator(cateProcess).catch((err) => {
-    console.error(err)
-  })
+  return promiseGenerator(cateProcess)
+    .then((data) => {
+      return {
+        siteInfo: siteInfo,
+        siteData: data
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+    })
 }
 
 /**
@@ -90,32 +97,35 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
 
   return puppeteer.launch({
       // TODO: 这里的timeout似乎没有效果
-      timeout: skuCateDetail.limit * 3000
+      // timeout: skuCateDetail.limit * 3000
+      timeout: 200000
     })
     .then(data => {
       browser = data;
 
-      const promiseList = [];
-
+      const detailProcess = [];
       skuCateDetail.detailLinks.forEach((url) => {
-        promiseList.push(
-          puppeteerHtml(browser, url)
-          .then((data) => {
-            let skuInfo = siteInfo.getSkuContent(url, data, skuCateDetail)
-            console.log(`>> 成功获取 ${skuInfo.sku_name.value} 商品数据！`)
-            return {
-              skuLink: url,
-              skuInfo: skuInfo,
-              cateInfo: skuCateDetail
-            }
-          })
-          .catch((err) => {
-            console.log(err)
-          })
-        )
+        detailProcess.push(() => {
+          return puppeteerHtml(browser, url)
+            .then((data) => {
+              let skuInfo = siteInfo.getSkuContent(url, data, skuCateDetail)
+              console.log(`>> 成功获取 ${skuInfo.sku_name.value} 商品数据！`)
+              return {
+                skuLink: url,
+                skuInfo: skuInfo,
+                cateInfo: skuCateDetail
+              }
+            })
+            .catch((err) => {
+              console.log(err)
+            })
+        })
       })
 
-      return Promise.all(promiseList)
+      return promiseGenerator(detailProcess)
+        .catch((err) => {
+          console.log(err)
+        });
     })
     .then((data) => {
       browser.close();
@@ -155,6 +165,10 @@ function puppeteerHtml(browser, url) {
     .then(() => {
       return page.content();
     })
+    .then((data) => {
+      page.close();
+      return data;
+    })
     .catch((err) => {
       console.log(err)
     })
@@ -165,14 +179,14 @@ function puppeteerHtml(browser, url) {
  * @param  {Object} data 商品的结构化数据
  * @return 
  */
-function genCsvData(data) {
+function genCsvData(siteInfo, siteData) {
   let skuData;
 
-  if (Array.isArray(data[0])) {
+  if (Array.isArray(siteData[0])) {
     skuData = [];
-    data.forEach(item => { skuData = skuData.concat(item) });
+    siteData.forEach(item => { skuData = skuData.concat(item) });
   } else {
-    skuData = data;
+    skuData = siteData;
   }
 
   const fields = [{
@@ -217,16 +231,30 @@ function genCsvData(data) {
 
 
   try {
-    let csv = json2csv({ data: skuData, fields: fields });
-    let fileName = path.resolve(`./data.${Date.now()}.csv`);
-    fs.writeFileSync(fileName, csv);
+    let content = json2csv({ data: skuData, fields: fields });
+    let fileName = path.resolve(`./${siteInfo.name.trim()}.${Date.now()}.csv`);
+
+    saveCsv(fileName, content)
 
     console.log(`> 成功生成 ${fileName} ！`)
   } catch (err) {
-    // Errors are thrown for bad options, or if the data is empty and no fields are provided.
-    // Be sure to provide fields if it is possible that your data array will be empty.
     console.error(err);
   }
+}
+
+/**
+ * 保存CSV文件
+ * @param  {String} fileName 文件地址
+ * @param  {String} content  文件内容
+ * @return 
+ */
+function saveCsv(fileName, content) {
+  // 防止excel打开乱码: https://github.com/f2e-journey/xueqianban/issues/34
+  const msExcelBuffer = Buffer.concat([
+    new Buffer('\xEF\xBB\xBF', 'binary'),
+    new Buffer(content)
+  ]);
+  fs.writeFileSync(fileName, msExcelBuffer);
 }
 
 /**
