@@ -1,0 +1,33 @@
+{
+  "name": "skuspider",
+  "version": "1.0.0",
+  "description": "sku spider",
+  "main": "index.js",
+  "dependencies": {
+    "cheerio": "^0.20.0",
+    "gbk": "^0.1.0",
+    "json2csv": "^3.11.1",
+    "puppeteer": "^0.10.2",
+    "request": "^2.79.0",
+    "request-promise": "^4.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiongwilee/skuspider.git"
+  },
+  "keywords": [
+    "sku",
+    "spider",
+    "crawler"
+  ],
+  "author": "xiongwilee",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xiongwilee/skuspider/issues"
+  },
+  "homepage": "https://github.com/xiongwilee/skuspider#readme"
+}
