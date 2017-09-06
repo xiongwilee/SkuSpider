@@ -2,7 +2,7 @@
 
 基于puppeteer的电商爬虫工具
 
-![](https://img003.qufenqi.com/products/27/1d/271d6bcfc39d4c569dde3f0dde99edee.gif)
+<img src="https://img003.qufenqi.com/products/27/1d/271d6bcfc39d4c569dde3f0dde99edee.gif" width="600">
 
 ## 使用方法
 
