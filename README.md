@@ -2,6 +2,8 @@
 
 基于puppeteer的电商爬虫工具
 
+<img src="https://img002.qufenqi.com/products/27/1d/271d6bcfc39d4c569dde3f0dde99edee.gif" width="400">
+
 ## 使用方法
 
 ### 第一步，下载代码，安装依赖：
