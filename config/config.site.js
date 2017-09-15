@@ -12,11 +12,8 @@ module.exports = [{
    * @return {String|Array} 页面URL
    */
   url: [
-    'https://list.jd.com/list.html?cat=9987,653,655&page=1&sort=sort_totalsales15_desc&trans=1',
-    'https://list.jd.com/list.html?cat=670,671,672&page=1&sort=sort_totalsales15_desc&trans=1',
-    /*'https://list.jd.com/list.html?cat=670,671,1105&page=1&sort=sort_totalsales15_desc&trans=1',
-    'https://list.jd.com/list.html?cat=670,677,688&page=1&sort=sort_totalsales15_desc&trans=1',
-    'https://list.jd.com/list.html?tid=51&page=1&sort=sort_totalsales15_desc&trans=1'*/
+    'https://list.jd.com/list.html?cat=670,671,2694&page=1&sort=sort_totalsales15_desc&trans=1&JL=4_2_0#J_main',
+    'https://list.jd.com/list.html?cat=9987,830,866&page=1&sort=sort_totalsales15_desc&trans=1&JL=4_2_0#J_main'
   ],
 
   /**
@@ -38,7 +35,7 @@ module.exports = [{
       const $ = cheerio.load(html);
 
       // 获取商品链接列表
-      const limit = 5; // 商品限制
+      const limit = 2; // 商品限制
       const links = $('.j-sku-item .p-img a');
       const detailLinks = [];
       for (let i = 0; i < links.length; i++) {
@@ -108,6 +105,12 @@ module.exports = [{
           name: '供应商',
           get value() {
             return $('.summary-service .hl_red').text().trim();
+          }
+        },
+        comments_num: {
+          name: '评论数',
+          get value() {
+            return $('#comment-count .count').text().trim();
           }
         }
       }
