@@ -7,6 +7,7 @@
     "cheerio": "^0.20.0",
     "gbk": "^0.1.0",
     "json2csv": "^3.11.1",
+    "promise-generator": "^1.0.0",
     "puppeteer": "^0.10.2",
     "request": "^2.79.0",
     "request-promise": "^4.2.1"

@@ -5,6 +5,7 @@ const path = require('path');
 
 const assert = require('assert');
 const rp = require("request-promise");
+const pg = require("promise-generator");
 const json2csv = require('json2csv');
 const puppeteer = require('puppeteer');
 
@@ -25,7 +26,7 @@ function skuSpider(siteConfig) {
     })
   });
 
-  return promiseGenerator(siteProcess)
+  return pg(siteProcess)
     .then((data) => {
       data.forEach((item) => {
         genCsvData(item.siteInfo, item.siteData);
@@ -73,7 +74,7 @@ function getAllSkulist(siteInfo) {
     })
   })
 
-  return promiseGenerator(cateProcess)
+  return pg(cateProcess)
     .then((data) => {
       return {
         siteInfo: siteInfo,
@@ -122,7 +123,7 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
         })
       })
 
-      return promiseGenerator(detailProcess)
+      return pg(detailProcess)
         .catch((err) => {
           console.log(err)
         });
@@ -260,31 +261,6 @@ function saveCsv(fileName, content) {
     new Buffer(content)
   ]);
   fs.writeFileSync(fileName, msExcelBuffer);
-}
-
-/**
- * 多个promise顺序执行器
- * @param  {Array} arr  数组，每个元素均为function，每个function均返回Promise
- * @return {Object}     Pormise
- */
-function promiseGenerator(arr) {
-  const data = [];
-  const last = Symbol('last');
-  
-  // 添加迭代队列，以获取最后一次的promise执行结果
-  arr.push(last);
-
-  return arr.reduce((sum, value, index) => {
-    return sum.then((result) => {
-      // 忽略初始数据，即Promise.resolve()的返回数据
-      if (index !== 0) data.push(result);
-
-      // 如果到最后一个节点，则完成迭代，返回总体数据
-      if (value === last) return data;
-
-      return value();
-    })
-  }, Promise.resolve())
 }
 
 /**
