@@ -107,10 +107,10 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
       const detailProcess = [];
       skuCateDetail.detailLinks.forEach((url) => {
         detailProcess.push(() => {
-          return puppeteerHtml(browser, url)
+          return puppeteerHtml(browser, url, siteInfo)
             .then((data) => {
               let skuInfo = siteInfo.getSkuContent(url, data, skuCateDetail)
-              console.log(`>> 成功获取 ${skuInfo.sku_name.value} 商品数据！`)
+              console.log(`>> 成功获取 ${skuInfo.sku_name.value} 商品数据，链接：${url}`);
               return {
                 skuLink: url,
                 skuInfo: skuInfo,
@@ -118,14 +118,14 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
               }
             })
             .catch((err) => {
-              console.log(err)
+              console.error(err)
             })
         })
       })
 
       return pg(detailProcess)
         .catch((err) => {
-          console.log(err)
+          console.error(err)
         });
     })
     .then((data) => {
@@ -134,7 +134,7 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
       return data;
     })
     .catch((err) => {
-      console.log(err)
+      console.error(err)
     })
 }
 
@@ -144,12 +144,17 @@ function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
  * @param  {String} url     页面连接
  * @return {Object}         <Promise<HTML String>>
  */
-function puppeteerHtml(browser, url) {
+function puppeteerHtml(browser, url, siteInfo) {
   let page;
   return browser.newPage()
     .then((data) => {
       page = data;
-      return page.setRequestInterceptionEnabled(true)
+
+      if (siteInfo.onDetailPageLoaded) {
+        siteInfo.onDetailPageLoaded(url, page);
+      }
+
+      return page;
     })
     .then(() => {
       page.on('request', interceptedRequest => {
@@ -172,7 +177,7 @@ function puppeteerHtml(browser, url) {
       return data;
     })
     .catch((err) => {
-      console.log(err)
+      console.error(err)
     })
 }
 
@@ -204,36 +209,41 @@ function genCsvData(siteInfo, siteData) {
     value: 'skuInfo.price.value',
     default: 'NULL'
   }, {
-    label: 'SPU评论数',
-    value: 'skuInfo.comments_num.value',
+    label: '品牌',
+    value: 'skuInfo.brand.value',
     default: 'NULL'
   }, {
-    label: '促销信息',
-    value(row, field, data) {
-      return row.skuInfo.sale.value.join("\n");
-    },
-    default: 'NULL'
-  }, {
-    label: '供应商',
-    value: 'skuInfo.supplier.value',
+    label: '销量',
+    value: 'skuInfo.sales_num.value',
     default: 'NULL'
   }, {
     label: '商品链接',
     value: 'skuLink',
     default: 'NULL'
   }, {
-    label: '一级品类',
-    value: 'cateInfo.catesList[0]',
+    label: '适用年龄',
+    value: 'skuInfo.age.value',
     default: 'NULL'
   }, {
-    label: '二级品类',
-    value: 'cateInfo.catesList[1]',
+    label: '尺寸',
+    value: 'skuInfo.size.value',
     default: 'NULL'
   }, {
-    label: '三级品类',
-    value: 'cateInfo.catesList[2]',
+    label: '重量',
+    value: 'skuInfo.weight.value',
     default: 'NULL'
-  }, ];
+  }, {
+    label: '促销信息',
+    value(row, field, data) {
+      return '无'
+      // return row.skuInfo.sale.value.join("\n");
+    },
+    default: 'NULL'
+  }, {
+    label: '供应商',
+    value: 'skuInfo.supplier.value',
+    default: 'NULL'
+  }];
 
 
   try {
@@ -262,35 +272,3 @@ function saveCsv(fileName, content) {
   ]);
   fs.writeFileSync(fileName, msExcelBuffer);
 }
-
-/**
- * 多个promise顺序执行器
- * @param  {Array} arr  数组，每个元素均为function，每个function均返回Promise
- * @return {Object}     Pormise
- */
-/*function promiseGenerator(arr) {
-  const data = [];
-  arr.push(null);
-
-  return gen(arr)
-
-  function gen(arr, next) {
-    let flag = !!next;
-
-    next = next || Promise.resolve();
-
-    if (arr[0] === null) {
-      return next.then((itemData) => {
-        data.push(itemData)
-        return data;
-      })
-    } else {
-      next = next.then((itemData) => {
-        flag && data.push(itemData);
-        return arr[0](itemData);
-      });
-
-      return gen(arr.slice(1), next)
-    }
-  }
-}*/
