@@ -205,39 +205,48 @@ function genCsvData(siteInfo, siteData) {
     value: 'skuInfo.sku_name.value',
     default: 'NULL'
   }, {
-    label: '商品原价',
+    label: '京东价格',
     value: 'skuInfo.price.value',
     default: 'NULL'
   }, {
-    label: '品牌',
-    value: 'skuInfo.brand.value',
+    label: '原价',
+    value: 'skuInfo.price_origin.value',
     default: 'NULL'
   }, {
     label: '销量',
     value: 'skuInfo.sales_num.value',
     default: 'NULL'
   }, {
-    label: '商品链接',
-    value: 'skuLink',
+    label: 'ISBN书号',
+    value: 'skuInfo.ISBN.value',
+    default: 'NULL'
+  }, {
+    label: '包装',
+    value: 'skuInfo.package_type.value',
+    default: 'NULL'
+  }, {
+    label: '出版社',
+    value: 'skuInfo.press.value',
+    default: 'NULL'
+  }, {
+    label: '开本',
+    value: 'skuInfo.format.value',
+    default: 'NULL'
+  }, {
+    label: '用纸',
+    value: 'skuInfo.paper_type.value',
     default: 'NULL'
   }, {
     label: '适用年龄',
-    value: 'skuInfo.age.value',
+    value: 'skuInfo.book_age.value',
     default: 'NULL'
   }, {
     label: '尺寸',
     value: 'skuInfo.size.value',
     default: 'NULL'
   }, {
-    label: '重量',
-    value: 'skuInfo.weight.value',
-    default: 'NULL'
-  }, {
-    label: '促销信息',
-    value(row, field, data) {
-      return '无'
-      // return row.skuInfo.sale.value.join("\n");
-    },
+    label: '商品链接',
+    value: 'skuLink',
     default: 'NULL'
   }, {
     label: '供应商',

@@ -5,154 +5,211 @@ const gbk = require("gbk");
 const cheerio = require("cheerio");
 
 module.exports = [{
-    id: 'jd',
-    name: '京东',
-    /**
-     * 页面连接，可以是一个string, 也可以是function
-     * @return {String|Array} 页面URL
-     */
-    url: [
-      'https://list.jd.com/list.html?cat=6233,6234,6243&page=1&sort=sort_totalsales15_desc&trans=1&JL=4_2_0#J_main'
-    ],
+  id: 'jd',
+  name: '京东',
+  /**
+   * 页面连接，可以是一个string, 也可以是function
+   * @return {String|Array} 页面URL
+   */
+  url: [
+    'https://list.jd.com/list.html?cat=1713,3263,4761&page=1&stock=0&sort=sort_commentcount_desc&trans=1&JL=4_5_0#J_main'
+  ],
 
-    /**
-     * 页面编码，null是指二进制编码
-     */
-    encoding: {
-      list: 'utf8'
-    },
+  /**
+   * 页面编码，null是指二进制编码
+   */
+  encoding: {
+    list: 'utf8'
+  },
 
-    /**
-     * 通过sku列表页的url获取商品详情页URL的方法
-     * @param   {String} url  当前页面URL
-     * @param   {String} html 通过页面连接爬取到的页面html
-     * @return {Array}      从html中解析到的sku详情页的链接
-     */
-    getSkuLink: function(_url, html) {
-      try {
+  /**
+   * 通过sku列表页的url获取商品详情页URL的方法
+   * @param   {String} url  当前页面URL
+   * @param   {String} html 通过页面连接爬取到的页面html
+   * @return {Array}      从html中解析到的sku详情页的链接
+   */
+  getSkuLink: function(_url, html) {
+    try {
 
-        const $ = cheerio.load(html);
-
-        // 获取商品链接列表
-        const limit = 1; // 商品限制
-        const links = $('.j-sku-item .p-img a');
-        const detailLinks = [];
-        for (let i = 0; i < links.length; i++) {
-          if (i === limit) break;
-
-          let domLink = url.resolve(_url, $(links[i]).attr('href'));
-          detailLinks.push(domLink);
-        }
-
-        // 获取品类列表
-        const catesList = [$('.crumbs-nav .crumbs-link').text()],
-          cates = $('.crumbs-nav .curr');
-        for (let i = 0; i < cates.length; i++) {
-          catesList.push($(cates[i]).text());
-        }
-
-        return {
-          url: _url,
-          limit,
-          catesList,
-          detailLinks: ["https://item.jd.com/3754283.html","https://item.jd.com/4204590.html","https://item.jd.com/4204586.html","https://item.jd.com/2525364.html","https://item.jd.com/4294662.html","https://item.jd.com/2199790.html","https://item.jd.com/4204592.html","https://item.jd.com/2200397.html","https://item.jd.com/1804150.html","https://item.jd.com/2208978.html","https://item.jd.com/4204600.html","https://item.jd.com/4294648.html","https://item.jd.com/3018450.html","https://item.jd.com/552478.html","https://item.jd.com/4204596.html","https://item.jd.com/2909459.html","https://item.jd.com/1179294.html","https://item.jd.com/4204608.html","https://item.jd.com/1179275.html","https://item.jd.com/3809510.html","https://item.jd.com/3754279.html","https://item.jd.com/3018454.html","https://item.jd.com/496196.html","https://item.jd.com/3282426.html","https://item.jd.com/1188326.html","https://item.jd.com/1374005960.html","https://item.jd.com/2108936.html","https://item.jd.com/3754277.html","https://item.jd.com/1397749.html","https://item.jd.com/2200389.html","https://item.jd.com/1425106.html","https://item.jd.com/2856807.html","https://item.jd.com/4204578.html","https://item.jd.com/18646169190.html","https://item.jd.com/1205729.html","https://item.jd.com/3378951.html","https://item.jd.com/1698964996.html","https://item.jd.com/2060926.html","https://item.jd.com/2151317.html","https://item.jd.com/4135410.html","https://item.jd.com/1349673444.html","https://item.jd.com/1804093.html","https://item.jd.com/18646169191.html","https://item.jd.com/20698497857.html","https://item.jd.com/1379185.html","https://item.jd.com/1179306.html","https://item.jd.com/13328590211.html","https://item.jd.com/2850525.html","https://item.jd.com/3809653.html","https://item.jd.com/2312789.html","https://item.jd.com/554682.html","https://item.jd.com/4305842.html","https://item.jd.com/17926332698.html","https://item.jd.com/2525372.html","https://item.jd.com/25245856720.html","https://item.jd.com/4305848.html","https://item.jd.com/1629498.html","https://item.jd.com/4135434.html","https://item.jd.com/3378941.html","https://item.jd.com/1019006.html","https://item.jd.com/4322308.html","https://item.jd.com/1297105.html","https://item.jd.com/22549534999.html","https://item.jd.com/3476719.html","https://item.jd.com/1619823565.html","https://item.jd.com/960307.html","https://item.jd.com/3809536.html","https://item.jd.com/2370704.html","https://item.jd.com/24279339544.html","https://item.jd.com/157064.html","https://item.jd.com/3809534.html","https://item.jd.com/4322338.html","https://item.jd.com/16978784676.html","https://item.jd.com/3030344.html","https://item.jd.com/2966760.html","https://item.jd.com/22718098124.html","https://item.jd.com/3809655.html","https://item.jd.com/1708490.html","https://item.jd.com/18646169192.html","https://item.jd.com/687141.html","https://item.jd.com/3018516.html","https://item.jd.com/10160173860.html","https://item.jd.com/2825492.html","https://item.jd.com/1219137.html","https://item.jd.com/14708434830.html","https://item.jd.com/3030318.html","https://item.jd.com/16915606838.html","https://item.jd.com/2856837.html","https://item.jd.com/1045608.html","https://item.jd.com/2289487.html","https://item.jd.com/11044096255.html","https://item.jd.com/1056263447.html","https://item.jd.com/10116983953.html","https://item.jd.com/1030413879.html","https://item.jd.com/1219099.html","https://item.jd.com/12494880703.html","https://item.jd.com/10448514021.html","https://item.jd.com/10977212908.html","https://item.jd.com/11195635740.html","https://item.jd.com/11157008501.html","https://item.jd.com/3273479.html","https://item.jd.com/3030272.html","https://item.jd.com/19568411378.html","https://item.jd.com/10160173859.html","https://item.jd.com/1729895.html","https://item.jd.com/10684352484.html","https://item.jd.com/1309591.html","https://item.jd.com/1629455.html","https://item.jd.com/2856809.html","https://item.jd.com/960298.html","https://item.jd.com/509042.html","https://item.jd.com/742232.html","https://item.jd.com/25060820997.html","https://item.jd.com/10160173857.html","https://item.jd.com/16031496437.html","https://item.jd.com/15111890166.html","https://item.jd.com/24279339545.html","https://item.jd.com/19521219590.html","https://item.jd.com/3273493.html","https://item.jd.com/10353005926.html"]
-        }
-      } catch (err) {
-        return;
-      }
-    },
-
-    /**
-     * 通过sku详情页的链接爬取到文章主体
-     * @param  {String} html            通过文sku详情页的链接爬取到文章的html
-     * @param  {Object} skuCateDetail   品类信息
-     * @return {Object}                 sku数据结构
-     */
-    getSkuContent: function(_url, html, skuCateDetail) {
       const $ = cheerio.load(html);
-      try {
-        return {
-          sku_id: {
-            name: 'SKU ID',
-            value: _url.match(/jd\.com\/(.+)\.html/)[1]
-          },
-          sku_name: {
-            name: '商品名称',
-            get value() {
-              return $('.product-intro .sku-name').text().trim();
-            }
-          },
-          brand: {
-            name: '品牌',
-            get value() {
-              return $('#parameter-brand').text().replace('品牌：', '').trim();
-            }
-          },
-          price: {
-            name: '商品价格',
-            get value() {
-              return $('.product-intro .p-price .price').text().trim();
-            }
-          },
-          age: {
-            get value() {
-              let ageArr = $('#detail .parameter2').text().split('\n').filter(item => item.indexOf('适用年龄：') > -1) || [];
-              return ageArr[0] ? ageArr[0].replace('适用年龄：', '').trim() : '无法获取';
-            }
-          },
-          sale: {
-            name: '促销信息',
-            get value() {
-              let domList = $('.p-promotions div .hl_red'),
-                list = [];
-              for (let i = 0; i < domList.length; i++) {
-                list.push($(domList[i]).text().trim());
-              }
 
-              return list;
+      // 获取商品链接列表
+      const limit = 1; // 商品限制
+      const links = $('.j-sku-item .p-img a');
+      const detailLinks = [];
+      for (let i = 0; i < links.length; i++) {
+        if (i === limit) break;
+
+        let domLink = url.resolve(_url, $(links[i]).attr('href'));
+        detailLinks.push(domLink);
+      }
+
+      // 获取品类列表
+      const catesList = [$('.crumbs-nav .crumbs-link').text()],
+        cates = $('.crumbs-nav .curr');
+      for (let i = 0; i < cates.length; i++) {
+        catesList.push($(cates[i]).text());
+      }
+
+      return {
+        url: _url,
+        limit,
+        catesList,
+        detailLinks: ["https://item.jd.com/10210762.html", "https://item.jd.com/10014284.html", "https://item.jd.com/10842664.html", "https://item.jd.com/10773705927.html", "https://item.jd.com/11660806.html", "https://item.jd.com/11660803.html", "https://item.jd.com/10034551.html", "https://item.jd.com/10703227.html", "https://item.jd.com/10223188608.html", "https://item.jd.com/11660799.html", "https://item.jd.com/11660807.html", "https://item.jd.com/10027626.html", "https://item.jd.com/10678319.html", "https://item.jd.com/10377828.html", "https://item.jd.com/11468033.html", "https://item.jd.com/11956994.html", "https://item.jd.com/11867663.html", "https://item.jd.com/11219386.html", "https://item.jd.com/11867780.html", "https://item.jd.com/11867792.html", "https://item.jd.com/10733241537.html", "https://item.jd.com/11445687.html", "https://item.jd.com/11565228.html", "https://item.jd.com/11353618.html", "https://item.jd.com/11660815.html", "https://item.jd.com/1752931218.html", "https://item.jd.com/11686906.html", "https://item.jd.com/11984183.html", "https://item.jd.com/10790110.html", "https://item.jd.com/10014290.html", "https://item.jd.com/11686910.html", "https://item.jd.com/10983981.html", "https://item.jd.com/1033484641.html", "https://item.jd.com/10543273.html", "https://item.jd.com/10451976757.html", "https://item.jd.com/10023376.html", "https://item.jd.com/12021218.html", "https://item.jd.com/11122173521.html", "https://item.jd.com/10439436.html", "https://item.jd.com/11630192.html", "https://item.jd.com/11911134.html", "https://item.jd.com/11094037.html", "https://item.jd.com/10301420.html", "https://item.jd.com/10189186621.html", "https://item.jd.com/10051409445.html", "https://item.jd.com/11920318.html", "https://item.jd.com/10943226.html", "https://item.jd.com/12066522.html", "https://item.jd.com/11182149.html", "https://item.jd.com/11197301.html", "https://item.jd.com/11350865.html", "https://item.jd.com/11670129.html", "https://item.jd.com/10155797530.html", "https://item.jd.com/11464246.html", "https://item.jd.com/12120878.html", "https://item.jd.com/11851402.html", "https://item.jd.com/11346545.html", "https://item.jd.com/11702006.html", "https://item.jd.com/11423164.html", "https://item.jd.com/11244684.html", "https://item.jd.com/11099279.html", "https://item.jd.com/11981656.html", "https://item.jd.com/11753709.html", "https://item.jd.com/1035116057.html", "https://item.jd.com/12107446.html", "https://item.jd.com/12174530.html", "https://item.jd.com/10012131.html", "https://item.jd.com/11328511.html", "https://item.jd.com/11403700.html", "https://item.jd.com/11645275.html", "https://item.jd.com/10196889.html", "https://item.jd.com/10193081.html", "https://item.jd.com/10637239.html", "https://item.jd.com/10044543.html", "https://item.jd.com/10020166.html", "https://item.jd.com/1459708075.html", "https://item.jd.com/10910024.html", "https://item.jd.com/11753736.html", "https://item.jd.com/10210766.html", "https://item.jd.com/1703747593.html", "https://item.jd.com/10882548.html", "https://item.jd.com/10374143.html", "https://item.jd.com/10538410.html", "https://item.jd.com/11968142.html", "https://item.jd.com/12012439.html", "https://item.jd.com/11215247.html", "https://item.jd.com/10833715479.html", "https://item.jd.com/11254901.html", "https://item.jd.com/11386903.html", "https://item.jd.com/10193083.html", "https://item.jd.com/11738914.html", "https://item.jd.com/10027588.html", "https://item.jd.com/11651365.html", "https://item.jd.com/11752738.html", "https://item.jd.com/11120351.html", "https://item.jd.com/11803348.html", "https://item.jd.com/11640679.html", "https://item.jd.com/11187753.html", "https://item.jd.com/11732497.html", "https://item.jd.com/11752755.html", "https://item.jd.com/11859939.html", "https://item.jd.com/11732899.html", "https://item.jd.com/11954665.html", "https://item.jd.com/10044545.html", "https://item.jd.com/10012180.html", "https://item.jd.com/10643782.html", "https://item.jd.com/10012132.html", "https://item.jd.com/11120338.html", "https://item.jd.com/1088646263.html", "https://item.jd.com/11058669.html", "https://item.jd.com/11797923.html", "https://item.jd.com/11346542.html", "https://item.jd.com/11453736.html", "https://item.jd.com/11447923.html", "https://item.jd.com/1642937428.html", "https://item.jd.com/11197290.html", "https://item.jd.com/10027655.html", "https://item.jd.com/11238669.html", "https://item.jd.com/11235189.html", "https://item.jd.com/10301443.html", "https://item.jd.com/10014270.html", "https://item.jd.com/12025399.html", "https://item.jd.com/11904465.html", "https://item.jd.com/11896036.html", "https://item.jd.com/11175561.html", "https://item.jd.com/11239425.html", "https://item.jd.com/12111444.html", "https://item.jd.com/1647006885.html", "https://item.jd.com/10014288.html", "https://item.jd.com/1612740386.html", "https://item.jd.com/11875165.html", "https://item.jd.com/12065314.html", "https://item.jd.com/11371328.html", "https://item.jd.com/10915292.html", "https://item.jd.com/12178616.html", "https://item.jd.com/11753729.html", "https://item.jd.com/10014280.html", "https://item.jd.com/10014295.html", "https://item.jd.com/11892916.html", "https://item.jd.com/10571183.html", "https://item.jd.com/10090033210.html", "https://item.jd.com/10204386.html", "https://item.jd.com/10014298.html", "https://item.jd.com/10027627.html", "https://item.jd.com/10941747.html", "https://item.jd.com/11929051.html", "https://item.jd.com/11548155.html", "https://item.jd.com/11304545.html", "https://item.jd.com/10027680.html", "https://item.jd.com/11371324.html", "https://item.jd.com/11855237.html", "https://item.jd.com/11801153.html", "https://item.jd.com/11559612.html", "https://item.jd.com/10991809.html", "https://item.jd.com/11735941.html", "https://item.jd.com/11434820.html", "https://item.jd.com/10787563432.html", "https://item.jd.com/10029228.html", "https://item.jd.com/10014364.html", "https://item.jd.com/11687328555.html", "https://item.jd.com/11240674.html", "https://item.jd.com/10023337.html", "https://item.jd.com/11657562.html", "https://item.jd.com/10995637.html", "https://item.jd.com/10027656.html", "https://item.jd.com/10378990.html", "https://item.jd.com/10257955996.html", "https://item.jd.com/11364997.html", "https://item.jd.com/10694099233.html", "https://item.jd.com/11008591.html", "https://item.jd.com/11807242.html", "https://item.jd.com/11774707.html", "https://item.jd.com/11842922.html", "https://item.jd.com/10941829.html", "https://item.jd.com/10695864.html", "https://item.jd.com/11239256.html", "https://item.jd.com/11244682.html", "https://item.jd.com/11364994.html", "https://item.jd.com/10952088.html", "https://item.jd.com/1408512494.html"]
+      }
+    } catch (err) {
+      return;
+    }
+  },
+
+  /**
+   * 通过sku详情页的链接爬取到文章主体
+   * @param  {String} html            通过文sku详情页的链接爬取到文章的html
+   * @param  {Object} skuCateDetail   品类信息
+   * @return {Object}                 sku数据结构
+   */
+  getSkuContent: function(_url, html, skuCateDetail) {
+    const $ = cheerio.load(html);
+    try {
+      return {
+        sku_id: {
+          name: 'SKU ID',
+          value: _url.match(/jd\.com\/(.+)\.html/)[1]
+        },
+        sku_name: {
+          name: '商品名称',
+          get value() {
+            return $('.product-intro .sku-name').text().trim();
+          }
+        },
+        brand: {
+          name: '品牌',
+          get value() {
+            return $('#parameter-brand').text().replace('品牌：', '').trim();
+          }
+        },
+        price: {
+          name: '京东价格',
+          get value() {
+            return $('#jd-price').text().trim();
+          }
+        },
+        price_origin: {
+          name: '商品原价',
+          get value() {
+            return $('#page_maprice').text().trim();
+          }
+        },
+        age: {
+          get value() {
+            let ageArr = $('#parameter2').text().split('\n').filter(item => item.indexOf('适用年龄：') > -1) || [];
+            return ageArr[0] ? ageArr[0].replace('适用年龄：', '').trim() : '无法获取';
+          }
+        },
+        book_age: {
+          get value() {
+            let arr = $('#name').text().match(/\[(.+)岁\]/) || [];
+            return arr[1] || '无法获取'
+          }
+        },
+        sale: {
+          name: '促销信息',
+          get value() {
+            let domList = $('.p-promotions div .hl_red'),
+              list = [];
+            for (let i = 0; i < domList.length; i++) {
+              list.push($(domList[i]).text().trim());
             }
-          },
-          supplier: {
-            name: '供应商',
-            get value() {
-              return $('.summary-service .hl_red').text().trim();
-            }
-          },
-          size: {
-            get value() {
-              let sizeArr = $('.tab-con .Ptable-item dd') || [];
-              return sizeArr.length > 0 ? $(sizeArr[sizeArr.length - 1]).text().trim() : '无法获取';
-            }
-          },
-          weight: {
-            get value() {
-              let weightArr = $('#detail .parameter2').text().split('\n').filter(item => item.indexOf('商品毛重：') > -1) || [];
-              return weightArr[0] ? weightArr[0].replace('商品毛重：', '').trim() : '无法获取';
-            }
-          },
-          postage: {
-            name: '运费',
-            get value() {
-              return $('.summary-stock .dcashDesc').text().trim();
-            }
-          },
-          comments_num: {
-            name: '评论数',
-            get value() {
-              return $('#comment-count .count').text().trim();
-            }
-          },
-          sales_num: {
-            name: '销量',
-            get value() {
-              return $('#comment-count .count').text().trim();
-            }
+
+            return list;
+          }
+        },
+        supplier: {
+          name: '供应商',
+          get value() {
+            return $('.summary-service .hl_red').text().trim();
+          }
+        },
+        size: {
+          get value() {
+            let sizeArr = $('.tab-con .Ptable-item dd') || [];
+            return sizeArr.length > 0 ? $(sizeArr[sizeArr.length - 1]).text().trim() : '无法获取';
+          }
+        },
+        weight: {
+          get value() {
+            let weightArr = $('#parameter2').text().split('\n').filter(item => item.indexOf('商品毛重：') > -1) || [];
+            return weightArr[0] ? weightArr[0].replace('商品毛重：', '').trim() : '无法获取';
+          }
+        },
+        postage: {
+          name: '运费',
+          get value() {
+            return $('.summary-stock .dcashDesc').text().trim();
+          }
+        },
+        comments_num: {
+          name: '评论数',
+          get value() {
+            return $('#comment-count .count').text().trim();
+          }
+        },
+        sales_num: {
+          name: '销量',
+          get value() {
+            return $('#comment-count .count').text().trim();
+          }
+        },
+        ISBN: {
+          name: 'ISBN号',
+          get value() {
+            let weightArr = $('#parameter2').text().split('\n').filter(item => item.indexOf('ISBN：') > -1) || [];
+            return weightArr[0] ? weightArr[0].replace('ISBN：', '').trim() : '无法获取';
+          }
+        },
+        package_type: {
+          name: '包装',
+          get value() {
+            let weightArr = $('#parameter2').text().split('\n').filter(item => item.indexOf('包装：') > -1) || [];
+            return weightArr[0] ? weightArr[0].replace('包装：', '').trim() : '无法获取';
+          }
+        },
+        press: {
+          name: '出版社',
+          get value() {
+            let weightArr = $('#parameter2').text().split('\n');
+            let id;
+            weightArr.filter((item, index) => {
+              if (item.indexOf('出版社：') > -1) {
+                id = index + 1
+                return true;
+              } else {
+                return false;
+              }
+            }) || [];
+
+            return weightArr[id].trim() || '无法获取';
+          }
+        },
+        format: {
+          name: '开本',
+          get value() {
+            let weightArr = $('#parameter2').text().split('\n').filter(item => item.indexOf('开本：') > -1) || [];
+            return weightArr[0] ? weightArr[0].replace('开本：', '').trim() : '无法获取';
+          }
+        },
+        paper_type: {
+          name: '纸张类型',
+          get value() {
+            let weightArr = $('#parameter2').text().split('\n').filter(item => item.indexOf('用纸：') > -1) || [];
+            return weightArr[0] ? weightArr[0].replace('用纸：', '').trim() : '无法获取';
           }
         }
-      } catch (err) {
-        return;
       }
+    } catch (err) {
+      return;
     }
+  }
   // }, {
   // id: 'taobao',
   // name: '淘宝',
