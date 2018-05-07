@@ -50,7 +50,6 @@ function skuSpider(siteConfig) {
  * @return {Obejct}             Promise
  */
 function getSku(browser, url, sites) {
-  const promiseList = [];
 
   const siteInfo = sites.find((item) => {
     if (item.is(url)) {
@@ -58,7 +57,11 @@ function getSku(browser, url, sites) {
     }
   });
 
-  if (!siteInfo) return Promise.resolve(`找不到 ${url} 对应的站点配置！`);
+  if (!siteInfo) return Promise.resolve({
+    siteInfo: {},
+    skuLink: url,
+    skuInfo: {}
+  });
 
   return puppeteerHtml(browser, url, siteInfo)
     .then((data) => {
@@ -77,6 +80,14 @@ function getSku(browser, url, sites) {
         skuLink: url,
         skuInfo: skuInfo
       }
+    }).catch((data) => {
+      console.error(`>> 解析 ${url} 页面中的商品数据失败！`);
+
+      return {
+        siteInfo: siteInfo,
+        skuLink: url,
+        skuInfo: {}
+      }
     });
 }
 
@@ -88,39 +99,41 @@ function getSku(browser, url, sites) {
  */
 function puppeteerHtml(browser, url, siteInfo) {
   let page;
+
   return browser.newPage()
     .then((data) => {
       page = data;
 
-      if (siteInfo.onDetailPageLoaded) {
-        siteInfo.onDetailPageLoaded(url, page);
-      }
+      // 设置完成请求的时机
+      if (siteInfo.onDetailPageLoaded) siteInfo.onDetailPageLoaded(url, page);
 
+      // 设置超时时间
+      page.setDefaultNavigationTimeout(10000)
+
+      // 设置页面请求可被截取
       return page.setRequestInterception(true);
-    })
-    .then(() => {
+    }).then(() => {
       page.on('request', interceptedRequest => {
-        if (interceptedRequest.url().endsWith('.png') || interceptedRequest.url().endsWith('.jpg')) {
+        const urlObj = interceptedRequest.url();
+        if (urlObj.endsWith('.png') || urlObj.endsWith('.jpg'))
           interceptedRequest.abort();
-        } else {
+        else
           interceptedRequest.continue();
-        }
       });
 
       return page.goto(url);
-    })
-    .then(() => {
+    }).then(() => {
       return page.content();
-    })
-    .then((data) => {
+    }).then((data) => {
       return page.close()
         .then(() => {
-          return data
-        })
+          return data;
+        });
     })
     .catch((err) => {
-      return
-    })
+      console.log(err);
+      return page.close()
+    });
 }
 
 /**
@@ -135,12 +148,24 @@ function genCsvData(skuDataLists) {
     value: 'skuInfo.site.value',
     default: 'NULL'
   }, {
-    label: 'SKU ID',
-    value: 'skuInfo.sku_id.value',
+    label: '适龄',
+    value: 'skuInfo.book_age.value',
+    default: 'NULL'
+  }, {
+    label: '出版社',
+    value: 'skuInfo.press.value',
     default: 'NULL'
   }, {
     label: '商品名称',
     value: 'skuInfo.sku_name.value',
+    default: 'NULL'
+  }, {
+    label: '包装',
+    value: 'skuInfo.package_type.value',
+    default: 'NULL'
+  }, {
+    label: '用纸',
+    value: 'skuInfo.paper_type.value',
     default: 'NULL'
   }, {
     label: '售价',
@@ -151,36 +176,48 @@ function genCsvData(skuDataLists) {
     value: 'skuInfo.price_origin.value',
     default: 'NULL'
   }, {
-    label: '销量',
+    label: '评价数',
     value: 'skuInfo.sales_num.value',
     default: 'NULL'
   }, {
-    label: 'ISBN书号',
-    value: 'skuInfo.ISBN.value',
+    label: '作者名字',
+    value: 'skuInfo.author_name.value',
     default: 'NULL'
   }, {
-    label: '包装',
-    value: 'skuInfo.package_type.value',
+    label: '重量',
+    value: 'skuInfo.weight.value',
     default: 'NULL'
   }, {
-    label: '出版社',
-    value: 'skuInfo.press.value',
+    label: '页数',
+    value: 'skuInfo.pages_num.value',
     default: 'NULL'
   }, {
-    label: '开本',
+    label: '开本规格',
     value: 'skuInfo.format.value',
-    default: 'NULL'
-  }, {
-    label: '用纸',
-    value: 'skuInfo.paper_type.value',
-    default: 'NULL'
-  }, {
-    label: '适用年龄',
-    value: 'skuInfo.book_age.value',
     default: 'NULL'
   }, {
     label: '商品链接',
     value: 'skuLink',
+    default: 'NULL'
+  }, {
+    label: '系列丛书名称',
+    value: 'skuInfo.books_name.value',
+    default: 'NULL'
+  }, {
+    label: '内容介绍',
+    value: 'skuInfo.content_intro.value',
+    default: 'NULL'
+  }, {
+    label: '编辑推荐',
+    value: 'skuInfo.editor_recom.value',
+    default: 'NULL'
+  }, {
+    label: '图书简介',
+    value: 'skuInfo.book_intro.value',
+    default: 'NULL'
+  }, {
+    label: 'ISBN书号',
+    value: 'skuInfo.ISBN.value',
     default: 'NULL'
   }];
 
