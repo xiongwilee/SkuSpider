@@ -19,22 +19,29 @@ module.exports = skuSpider;
 function skuSpider(siteConfig) {
   const siteProcess = [];
 
-  siteConfig.forEach((siteInfo) => {
-    siteProcess.push(() => {
-      console.log(`> 开始获取 ${siteInfo.name} 的配置数据...`)
-      return getAllSkulist(siteInfo);
-    })
-  });
 
-  return pg(siteProcess)
-    .then((data) => {
-      data.forEach((item) => {
-        genCsvData(item.siteInfo, item.siteData);
+
+  return puppeteer.launch()
+    .then((browser) => {
+
+      siteConfig.urls.forEach((url) => {
+        siteProcess.push(() => {
+          console.log(`> 开始获取 ${url} 的页面数据...`)
+          return getSku(browser, url, siteConfig.site);
+        })
       });
+
+      return pg(siteProcess)
+        .then((data) => {
+          browser.close();
+
+          return genCsvData(data);
+        })
+        .catch((err) => {
+          console.error(err)
+        })
     })
-    .catch((err) => {
-      console.error(err)
-    })
+
 }
 
 /**
@@ -42,100 +49,35 @@ function skuSpider(siteConfig) {
  * @param  {Object}   siteInfo  商品列表页配置
  * @return {Obejct}             Promise
  */
-function getAllSkulist(siteInfo) {
+function getSku(browser, url, sites) {
   const promiseList = [];
 
-  let urls = typeof siteInfo.url == 'function' ? siteInfo.url() : siteInfo.url;
-  if (!Array.isArray(urls)) urls = new Array(urls);
+  const siteInfo = sites.find((item) => {
+    if (item.is(url)) {
+      return item;
+    }
+  });
 
-  // 如果没有getSkuLink方法，则直接退出
-  assert(siteInfo.getSkuLink, `${siteInfo.name}没有配置'getSkuLink'方法！`)
+  if (!siteInfo) return Promise.resolve(`找不到 ${url} 对应的站点配置！`);
 
-  let cateProcess = [];
-
-  urls.forEach((url) => {
-    cateProcess.push(() => {
-      return rp({
-          uri: url,
-          method: 'get',
-          encoding: siteInfo.encoding.list
-        })
-        .then((body) => {
-          // 获取商品详情页链接
-          return siteInfo.getSkuLink(url, body);
-        })
-        .then((data) => {
-          // 通过商品详情页链接获取商品详情
-          return getAllSkudetail(siteInfo, url, data);
-        })
-        .catch((err) => {
-          console.error(err);
-        })
-    })
-  })
-
-  return pg(cateProcess)
+  return puppeteerHtml(browser, url, siteInfo)
     .then((data) => {
+      let skuInfo;
+
+      if (data) {
+        skuInfo = siteInfo.getSkuContent(url, data)
+        console.log(`>> 成功获取 ${skuInfo.sku_name.value} 商品数据，链接：${url}`);
+      } else {
+        skuInfo = {};
+        console.error(`>> 获取 ${url} 商品数据失败！`);
+      }
+
       return {
         siteInfo: siteInfo,
-        siteData: data
+        skuLink: url,
+        skuInfo: skuInfo
       }
-    })
-    .catch((err) => {
-      console.error(err)
-    })
-}
-
-/**
- * 获取商品详情页内容
- * @param  {Object} siteInfo    站点信息
- * @param  {String} skuListUrl  sku列表页URL
- * @param  {String} skuCateDetail 商品品类数据
- * @return {Object}             商品数据
- */
-function getAllSkudetail(siteInfo, skuListUrl, skuCateDetail) {
-  let browser;
-
-  return puppeteer.launch({
-      // TODO: 这里的timeout似乎没有效果
-      // timeout: skuCateDetail.limit * 3000
-      timeout: 200000
-    })
-    .then(data => {
-      browser = data;
-
-      const detailProcess = [];
-      skuCateDetail.detailLinks.forEach((url) => {
-        detailProcess.push(() => {
-          return puppeteerHtml(browser, url, siteInfo)
-            .then((data) => {
-              let skuInfo = siteInfo.getSkuContent(url, data, skuCateDetail)
-              console.log(`>> 成功获取 ${skuInfo.sku_name.value} 商品数据，链接：${url}`);
-              return {
-                skuLink: url,
-                skuInfo: skuInfo,
-                cateInfo: skuCateDetail
-              }
-            })
-            .catch((err) => {
-              console.error(err)
-            })
-        })
-      })
-
-      return pg(detailProcess)
-        .catch((err) => {
-          console.error(err)
-        });
-    })
-    .then((data) => {
-      browser.close();
-      console.log(`> 成功获取 ${skuCateDetail.catesList.join('>')} 的前 ${skuCateDetail.limit} 个商品！`)
-      return data;
-    })
-    .catch((err) => {
-      console.error(err)
-    })
+    });
 }
 
 /**
@@ -154,12 +96,11 @@ function puppeteerHtml(browser, url, siteInfo) {
         siteInfo.onDetailPageLoaded(url, page);
       }
 
-      return page;
+      return page.setRequestInterception(true);
     })
     .then(() => {
       page.on('request', interceptedRequest => {
-        if (interceptedRequest.url.endsWith('.png') ||
-          interceptedRequest.url.endsWith('.jpg')) {
+        if (interceptedRequest.url().endsWith('.png') || interceptedRequest.url().endsWith('.jpg')) {
           interceptedRequest.abort();
         } else {
           interceptedRequest.continue();
@@ -172,12 +113,13 @@ function puppeteerHtml(browser, url, siteInfo) {
       return page.content();
     })
     .then((data) => {
-      // page.close返回一个promise，暂时先注释
-      // page.close();
-      return data;
+      return page.close()
+        .then(() => {
+          return data
+        })
     })
     .catch((err) => {
-      console.error(err)
+      return
     })
 }
 
@@ -186,17 +128,13 @@ function puppeteerHtml(browser, url, siteInfo) {
  * @param  {Object} data 商品的结构化数据
  * @return 
  */
-function genCsvData(siteInfo, siteData) {
-  let skuData;
-
-  if (Array.isArray(siteData[0])) {
-    skuData = [];
-    siteData.forEach(item => { skuData = skuData.concat(item) });
-  } else {
-    skuData = siteData;
-  }
+function genCsvData(skuDataLists) {
 
   const fields = [{
+    label: '电商',
+    value: 'skuInfo.site.value',
+    default: 'NULL'
+  }, {
     label: 'SKU ID',
     value: 'skuInfo.sku_id.value',
     default: 'NULL'
@@ -205,7 +143,7 @@ function genCsvData(siteInfo, siteData) {
     value: 'skuInfo.sku_name.value',
     default: 'NULL'
   }, {
-    label: '京东价格',
+    label: '售价',
     value: 'skuInfo.price.value',
     default: 'NULL'
   }, {
@@ -241,29 +179,27 @@ function genCsvData(siteInfo, siteData) {
     value: 'skuInfo.book_age.value',
     default: 'NULL'
   }, {
-    label: '尺寸',
-    value: 'skuInfo.size.value',
-    default: 'NULL'
-  }, {
     label: '商品链接',
     value: 'skuLink',
-    default: 'NULL'
-  }, {
-    label: '供应商',
-    value: 'skuInfo.supplier.value',
     default: 'NULL'
   }];
 
 
   try {
-    let content = json2csv({ data: skuData, fields: fields });
-    let fileName = path.resolve(`./${siteInfo.name.trim()}.${Date.now()}.csv`);
+    const content = json2csv({ data: skuDataLists, fields: fields });
+
+    const now = new Date();
+    const nowStr = `${now.getFullYear()}${now.getMonth()+1}${now.getMonth()}${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
+    const fileName = path.resolve(`./${nowStr}-${skuDataLists.length}.csv`);
 
     saveCsv(fileName, content)
 
     console.log(`> 成功生成 ${fileName} ！`)
+
+    return skuDataLists;
   } catch (err) {
     console.error(err);
+    return
   }
 }
 
